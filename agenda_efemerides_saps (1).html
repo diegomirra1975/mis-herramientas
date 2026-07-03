@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda de Efemérides — SAPS Lanús</title>
+<style>
+  :root{
+    --paper:#F6F3EC;
+    --ink:#1E2A28;
+    --teal:#0F4C46;
+    --teal-deep:#0A332F;
+    --celeste:#5B9BD5;
+    --celeste-soft:#E7F0FA;
+    --sol:#C98A2C;
+    --line:#D9D2C2;
+    --card:#FFFFFF;
+    --muted:#6B7570;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px;}
+
+  header.top{
+    display:flex;flex-direction:column;gap:6px;
+    border-bottom:3px solid var(--teal);
+    padding-bottom:18px;margin-bottom:22px;
+  }
+  .eyebrow{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--teal);font-weight:700;
+  }
+  h1{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:32px;margin:2px 0 0;color:var(--teal-deep);font-weight:700;
+    letter-spacing:-.01em;
+  }
+  .sub{color:var(--muted);font-size:14px;margin-top:4px;max-width:640px;line-height:1.5;}
+
+  .controls{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    margin-bottom:18px;
+  }
+  input[type=text]{
+    flex:1;min-width:220px;
+    padding:10px 14px;border:1.5px solid var(--line);border-radius:8px;
+    font-size:14px;background:var(--card);color:var(--ink);
+  }
+  input[type=text]:focus{outline:2px solid var(--celeste);border-color:var(--celeste);}
+  .catbtns{display:flex;gap:6px;}
+  .catbtn{
+    padding:9px 14px;border-radius:8px;border:1.5px solid var(--line);
+    background:var(--card);font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);
+  }
+  .catbtn[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff;}
+
+  .months{
+    display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;
+  }
+  .mbtn{
+    padding:7px 11px;border-radius:20px;border:1px solid var(--line);
+    background:var(--card);font-size:12.5px;cursor:pointer;color:var(--ink);
+  }
+  .mbtn[aria-pressed="true"]{background:var(--sol);border-color:var(--sol);color:#fff;}
+
+  .upcoming{
+    background:var(--teal-deep);color:#F6F3EC;border-radius:12px;
+    padding:18px 20px;margin-bottom:26px;
+  }
+  .upcoming h2{
+    font-family:Georgia,serif;font-size:15px;margin:0 0 10px;font-weight:700;
+    letter-spacing:.02em;color:#EADFC8;
+  }
+  .upc-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;}
+  .upc-card{
+    flex:0 0 auto;min-width:150px;background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;cursor:pointer;
+  }
+  .upc-card:hover{background:rgba(255,255,255,.14);}
+  .upc-date{font-size:11px;color:#B9D6C7;font-weight:700;letter-spacing:.04em;}
+  .upc-title{font-size:13px;margin-top:3px;line-height:1.3;}
+
+  .month-group{margin-bottom:26px;}
+  .month-title{
+    font-family:Georgia,serif;font-size:19px;color:var(--teal-deep);
+    border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px;
+  }
+  .cards{display:flex;flex-direction:column;gap:8px;}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;
+    transition:box-shadow .15s;
+  }
+  .card:hover{box-shadow:0 2px 10px rgba(15,76,70,.10);}
+  .daybadge{
+    flex:0 0 44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:16px;color:#fff;
+  }
+  .daybadge.patria{background:var(--celeste);}
+  .daybadge.salud{background:var(--teal);}
+  .card-body{flex:1;}
+  .card-title{font-weight:700;font-size:14.5px;color:var(--ink);}
+  .card-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+  .tag{
+    display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-left:8px;
+  }
+  .tag.patria{background:var(--celeste-soft);color:#2A5D8C;}
+  .tag.salud{background:#E4F0EC;color:var(--teal);}
+
+  .empty{color:var(--muted);font-size:13px;padding:20px 0;}
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,20,19,.55);display:none;
+    align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto;z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--card);border-radius:14px;max-width:620px;width:100%;
+    padding:26px 26px 22px;position:relative;margin-top:20px;
+  }
+  .modal-close{
+    position:absolute;top:14px;right:16px;border:none;background:none;font-size:20px;
+    cursor:pointer;color:var(--muted);
+  }
+  .modal .tag{margin-left:0;margin-bottom:8px;}
+  .modal h3{font-family:Georgia,serif;font-size:22px;margin:4px 0 4px;color:var(--teal-deep);}
+  .modal .fecha{font-size:13px;color:var(--muted);margin-bottom:14px;}
+  .modal p.desc{font-size:14px;line-height:1.55;margin:0 0 14px;}
+  .modal .fuente{font-size:11.5px;color:var(--muted);margin-bottom:16px;font-style:italic;}
+  .section-label{
+    font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;
+    color:var(--teal);margin:16px 0 8px;
+  }
+  ul.acts{margin:0;padding-left:18px;font-size:13.5px;line-height:1.6;}
+  textarea{
+    width:100%;min-height:110px;border:1.5px solid var(--line);border-radius:8px;
+    padding:10px;font-size:13px;font-family:inherit;resize:vertical;color:var(--ink);
+  }
+  .modal-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  button.btn{
+    border:none;border-radius:7px;padding:9px 14px;font-size:12.5px;font-weight:600;
+    cursor:pointer;
+  }
+  .btn.primary{background:var(--teal);color:#fff;}
+  .btn.ghost{background:var(--celeste-soft);color:#2A5D8C;}
+  .btn.warn{background:#F3E8DD;color:var(--sol);}
+  .note-box{margin-top:16px;}
+  .note-box textarea{min-height:60px;}
+  .saved-flag{font-size:11.5px;color:var(--teal);margin-top:6px;display:none;}
+
+  footer.note{
+    margin-top:36px;font-size:11.5px;color:var(--muted);line-height:1.6;
+    border-top:1px solid var(--line);padding-top:14px;
+  }
+
+  @media (max-width:560px){
+    h1{font-size:26px;}
+    .modal{padding:20px 18px 18px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">SAPS · Hospital Narciso López · Lanús</div>
+    <h1>Agenda de Efemérides</h1>
+    <div class="sub">Fechas patrias y días de salud (Ministerio de Salud de la Nación, Ministerio de Salud de la Provincia de Buenos Aires y OPS/OMS), con sugerencias de actividades para primer nivel de atención y textos listos para difusión.</div>
+  </header>
+
+  <div class="upcoming">
+    <h2>Próximas fechas</h2>
+    <div class="upc-row" id="upcomingRow"></div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="Buscar por nombre, tema o palabra clave…">
+    <div class="catbtns">
+      <button class="catbtn" data-cat="todas" aria-pressed="true">Todas</button>
+      <button class="catbtn" data-cat="patria" aria-pressed="false">Patrias</button>
+      <button class="catbtn" data-cat="salud" aria-pressed="false">Salud</button>
+    </div>
+  </div>
+
+  <div class="months" id="monthNav"></div>
+
+  <div id="results"></div>
+
+  <div class="upcoming" style="background:var(--celeste-soft);color:var(--teal-deep);">
+    <h2 style="color:var(--teal-deep);">Portales oficiales</h2>
+    <div class="upc-row">
+      <a class="upc-card" style="background:#fff;border-color:var(--line);color:var(--ink);text-decoration:none;" href="https://www.argentina.gob.ar/salud" target="_blank" rel="noopener"><div class="upc-date" style="color:var(--teal);">NACIÓN</div><div class="upc-title">Ministerio de Salud de la Nación</div></a>
+      <a class="upc-card" style="background:#fff;border-color:var(--line);color:var(--ink);text-decoration:none;" href="https://www.gba.gob.ar/saludprovincia" target="_blank" rel="noopener"><div class="upc-date" style="color:var(--teal);">PBA</div><div class="upc-title">Ministerio de Salud de la Provincia de Buenos Aires</div></a>
+      <a class="upc-card" style="background:#fff;border-color:var(--line);color:var(--ink);text-decoration:none;" href="https://www.paho.org/es/documentos/afiche-calendario-celebraciones-dias-salud-ops-para-2026" target="_blank" rel="noopener"><div class="upc-date" style="color:var(--teal);">OPS/OMS</div><div class="upc-title">Afiche calendario de días de salud OPS 2026</div></a>
+      <a class="upc-card" style="background:#fff;border-color:var(--line);color:var(--ink);text-decoration:none;" href="https://www.argentina.gob.ar/jefatura/feriados-nacionales-2026" target="_blank" rel="noopener"><div class="upc-date" style="color:var(--teal);">FERIADOS</div><div class="upc-title">Calendario oficial de feriados nacionales</div></a>
+    </div>
+  </div>
+
+  <footer class="note">
+    Fuente de referencia general: calendarios oficiales del Ministerio de Salud de la Nación, Ministerio de Salud de la Provincia de Buenos Aires y OPS/OMS. Algunas fechas de salud son móviles (ej. "último domingo de enero", "tercer miércoles de noviembre") — verificar el día exacto de cada año. Herramienta editable: se pueden agregar, corregir o quitar efemérides directamente en el código fuente. Las notas y recordatorios que guardes acá son personales, solo vos las ves en este navegador.
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="modal-close" id="closeModal">✕</button>
+    <span class="tag" id="modalTag"></span>
+    <h3 id="modalTitle"></h3>
+    <div class="fecha" id="modalFecha"></div>
+    <p class="desc" id="modalDesc"></p>
+    <div class="fuente" id="modalFuente"></div>
+
+    <div class="section-label">Actividades sugeridas para APS</div>
+    <ul class="acts" id="modalActs"></ul>
+
+    <div class="section-label">Dónde ampliar información</div>
+    <div class="modal-actions" id="modalLinks"></div>
+
+    <div class="section-label">Texto para difusión (editable)</div>
+    <textarea id="modalTexto"></textarea>
+    <div class="modal-actions">
+      <button class="btn primary" id="copyBtn">Copiar texto</button>
+      <button class="btn ghost" id="resetBtn">Restaurar original</button>
+    </div>
+
+    <div class="note-box">
+      <div class="section-label">Recordatorio / nota del equipo</div>
+      <textarea id="modalNote" placeholder="Ej: avisar al equipo el lunes anterior, reservar sala, imprimir afiche…"></textarea>
+      <div class="modal-actions">
+        <button class="btn warn" id="saveNoteBtn">Guardar nota</button>
+        <span class="saved-flag" id="savedFlag">Guardado ✓</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+// month/day: day may be a number (fixed) or a string describing a movable date.
+// sortDay is used for ordering/next-upcoming purposes (approximate for movable dates).
+const DATA = [
+// ---- ENERO ----
+{id:"an-nuevo", month:1, day:1, sortDay:1, cat:"patria", title:"Año Nuevo", desc:"Feriado nacional.", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:""},
+{id:"lepra", month:1, day:"último domingo", sortDay:26, cat:"salud", title:"Día Mundial contra la Lepra", desc:"Jornada de concientización sobre la enfermedad de Hansen, su diagnóstico temprano y la lucha contra el estigma.", fuente:"OMS / OPS.", acts:["Revisar antecedentes de contactos en pacientes con diagnóstico previo del área programática.","Cartelería en sala de espera sobre signos de alarma dermatológicos y neurológicos.","Recordar circuito de derivación a dermatología/infectología del hospital."], texto:"Hoy es el Día Mundial contra la Lepra. Desde el SAPS recordamos la importancia del diagnóstico temprano: ante manchas en la piel con pérdida de sensibilidad, consultá en tu centro de salud."},
+{id:"trop-desatendidas", month:1, day:30, sortDay:30, cat:"salud", title:"Día Mundial de las Enfermedades Tropicales Desatendidas", desc:"Visibiliza enfermedades como Chagas, leishmaniasis y dengue, prevalentes en nuestra región.", fuente:"OMS.", acts:["Reforzar tamizaje de Chagas en embarazadas y niños del área programática.","Actividad de descacharrado/prevención de dengue en dispositivos extramuro.","Material informativo sobre vectores en US y CAPS."], texto:"Día Mundial de las Enfermedades Tropicales Desatendidas: Chagas, dengue y leishmaniasis siguen siendo un desafío en nuestra región. Consultá sobre prevención y control de vectores en tu centro de salud más cercano."},
+
+// ---- FEBRERO ----
+{id:"cancer", month:2, day:4, sortDay:34, cat:"salud", title:"Día Mundial contra el Cáncer", desc:"Promueve la prevención, detección temprana y acceso equitativo al tratamiento oncológico.", fuente:"OMS / Instituto Nacional del Cáncer, Argentina.", acts:["Turnos de PAP y control mamario en el dispositivo de salud sexual.","Charla breve sobre factores de riesgo modificables (tabaco, alcohol, sedentarismo).","Difundir programas nacionales/provinciales de tamizaje gratuito."], texto:"Día Mundial contra el Cáncer. La detección temprana salva vidas: acercate a tu centro de salud para conocer los controles y estudios disponibles de forma gratuita."},
+{id:"mgf", month:2, day:6, sortDay:37, cat:"salud", title:"Día Internacional de Tolerancia Cero con la Mutilación Genital Femenina", desc:"Jornada de sensibilización sobre derechos y salud de niñas y mujeres.", fuente:"ONU / OMS.", acts:["Incluir el tema en capacitación de equipo de salud sexual y géneros."], texto:""},
+{id:"raras", month:2, day:"último día", sortDay:56, cat:"salud", title:"Día Mundial de las Enfermedades Raras", desc:"Visibiliza el diagnóstico oportuno y el acompañamiento a pacientes con enfermedades poco frecuentes.", fuente:"EURORDIS / Argentina.", acts:["Revisar circuitos de derivación a genética y centros de referencia.","Difundir información sobre CUD y cobertura de tratamientos."], texto:"Día Mundial de las Enfermedades Raras: acompañamos a las familias que atraviesan el desafío de un diagnóstico poco frecuente. Consultá sobre derivación y cobertura en tu centro de salud."},
+
+// ---- MARZO ----
+{id:"audicion", month:3, day:3, sortDay:63, cat:"salud", title:"Día Mundial de la Audición", desc:"Promueve el cuidado auditivo y la detección temprana de hipoacusia.", fuente:"OMS.", acts:["Recordar pesquisa auditiva neonatal (OEA) en recién nacidos del área.","Difundir cuidado auditivo frente a exposición a ruido."], texto:""},
+{id:"memoria", month:3, day:24, sortDay:84, cat:"patria", title:"Día Nacional de la Memoria por la Verdad y la Justicia", desc:"Feriado nacional en conmemoración de las víctimas del terrorismo de Estado.", fuente:"Calendario oficial de feriados, Argentina.", acts:["Actividad institucional de reflexión con el equipo.","Articulación con Salud Mental para abordaje de memoria colectiva y derechos humanos."], texto:"24 de marzo: Día Nacional de la Memoria por la Verdad y la Justicia. Memoria, Verdad y Justicia."},
+{id:"tbc", month:3, day:24, sortDay:84, cat:"salud", title:"Día Mundial de la Tuberculosis", desc:"Jornada de concientización sobre prevención, diagnóstico y tratamiento de la TBC, aún prevalente en el conurbano.", fuente:"OMS / Ministerio de Salud de la Nación.", acts:["Reforzar pesquisa de sintomáticos respiratorios en consulta de guardia y sala.","Recordar circuito de baciloscopía y notificación obligatoria.","Difundir en dispositivos extramuro signos de alarma (tos >15 días)."], texto:"Día Mundial de la Tuberculosis. Tos persistente por más de 15 días: consultá, el diagnóstico y tratamiento son gratuitos en el sistema público de salud."},
+{id:"sindrome-down", month:3, day:21, sortDay:81, cat:"salud", title:"Día Mundial del Síndrome de Down", desc:"Promueve la inclusión y los derechos de personas con síndrome de Down.", fuente:"ONU.", acts:["Articular con equipo de discapacidad y estimulación temprana del área."], texto:""},
+
+// ---- ABRIL ----
+{id:"malvinas", month:4, day:2, sortDay:92, cat:"patria", title:"Día del Veterano y de los Caídos en la Guerra de Malvinas", desc:"Feriado nacional en homenaje a los veteranos y caídos de Malvinas.", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:"2 de abril: Día del Veterano y de los Caídos en la Guerra de Malvinas. Honor a nuestros veteranos."},
+{id:"autismo", month:4, day:2, sortDay:92, cat:"salud", title:"Día Mundial de Concienciación sobre el Autismo", desc:"Promueve la inclusión y detección temprana del espectro autista.", fuente:"ONU / OMS.", acts:["Reforzar pesquisa de desarrollo (M-CHAT u otros) en controles de niño sano.","Articular con equipo de salud mental infantil y discapacidad."], texto:"Día Mundial de Concienciación sobre el Autismo. La detección temprana marca la diferencia: consultá sobre el desarrollo de tu hijo/a en los controles de niño sano."},
+{id:"salud-mundial", month:4, day:7, sortDay:97, cat:"salud", title:"Día Mundial de la Salud", desc:"Aniversario de la creación de la OMS (1948). Cada año se elige un tema prioritario para la salud global.", fuente:"OMS.", acts:["Jornada abierta de promoción de salud en sala de espera.","Actividad conjunta entre dispositivos intramuro y extramuro."], texto:"7 de abril: Día Mundial de la Salud. La salud es un derecho: conocé los servicios disponibles en tu centro de salud del primer nivel de atención."},
+{id:"paludismo", month:4, day:25, sortDay:115, cat:"salud", title:"Día Mundial del Paludismo (Malaria)", desc:"Jornada de concientización sobre prevención y control de la malaria.", fuente:"OMS.", acts:[], texto:""},
+{id:"inmunizacion", month:4, day:"última semana", sortDay:120, cat:"salud", title:"Semana Mundial de la Inmunización", desc:"Promueve la importancia de las vacunas y la actualización del calendario nacional.", fuente:"OMS / Ministerio de Salud de la Nación.", acts:["Jornada de repaso de calendario nacional de vacunación por edad.","Búsqueda activa de esquemas incompletos en libreta sanitaria.","Vacunatorio extendido en US/CAPS durante la semana."], texto:"Semana Mundial de la Inmunización. Revisá el calendario de vacunación de toda la familia: las vacunas son gratuitas y obligatorias en todos los centros de salud."},
+
+// ---- MAYO ----
+{id:"trabajador", month:5, day:1, sortDay:121, cat:"patria", title:"Día del Trabajador", desc:"Feriado nacional.", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:""},
+{id:"higiene-manos", month:5, day:5, sortDay:125, cat:"salud", title:"Día Mundial de la Higiene de Manos", desc:"Campaña de la OMS sobre higiene de manos en la atención de la salud, clave en control de infecciones.", fuente:"OMS.", acts:["Recordatorio de técnica correcta de higiene de manos al equipo de salud.","Cartelería en consultorios y salas de espera."], texto:""},
+{id:"enfermeria", month:5, day:12, sortDay:132, cat:"salud", title:"Día Internacional de la Enfermería", desc:"Homenaje al aniversario del nacimiento de Florence Nightingale y al rol del personal de enfermería.", fuente:"Consejo Internacional de Enfermeras.", acts:["Reconocimiento institucional al equipo de enfermería del SAPS."], texto:"Feliz Día de la Enfermería a todo el equipo que sostiene la atención diaria en nuestros centros de salud. ¡Gracias!"},
+{id:"hta", month:5, day:17, sortDay:137, cat:"salud", title:"Día Mundial de la Hipertensión Arterial", desc:"Promueve el control y prevención de la hipertensión, principal factor de riesgo cardiovascular.", fuente:"OMS / Sociedad Argentina de Hipertensión Arterial.", acts:["Jornada de toma de presión arterial gratuita en sala de espera.","Difundir hábitos de prevención (sal, actividad física, control periódico)."], texto:"Día Mundial de la Hipertensión Arterial. Controlate la presión: es rápido, gratuito y puede prevenir un evento cardiovascular. Te esperamos en tu centro de salud."},
+{id:"revolucion-mayo", month:5, day:25, sortDay:145, cat:"patria", title:"Día de la Revolución de Mayo", desc:"Feriado nacional en conmemoración de la Revolución de Mayo de 1810.", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:"25 de Mayo: Día de la Revolución de Mayo."},
+{id:"tabaco", month:5, day:31, sortDay:151, cat:"salud", title:"Día Mundial Sin Tabaco", desc:"Promueve la cesación tabáquica y la protección frente al humo de tabaco ajeno.", fuente:"OMS.", acts:["Oferta de consultorio de cesación tabáquica.","Cartelería de espacios 100% libres de humo en el centro de salud.","Charla breve sobre estrategias de cesación en sala de espera."], texto:"Día Mundial Sin Tabaco. Si estás pensando en dejar de fumar, en tu centro de salud podés encontrar acompañamiento profesional gratuito."},
+
+// ---- JUNIO ----
+{id:"donante-sangre", month:6, day:14, sortDay:165, cat:"salud", title:"Día Mundial del Donante de Sangre", desc:"Reconoce a los donantes voluntarios y promueve la donación regular de sangre.", fuente:"OMS.", acts:["Difundir requisitos y horarios del banco de sangre de referencia.","Campaña de donación articulada con el hospital."], texto:"Día Mundial del Donante de Sangre. Donar sangre salva vidas: acercate al banco de sangre del hospital, es un gesto simple y solidario."},
+{id:"bandera", month:6, day:20, sortDay:171, cat:"patria", title:"Día de la Bandera", desc:"Feriado nacional en homenaje al General Manuel Belgrano, creador de la bandera argentina.", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:"20 de junio: Día de la Bandera. Homenaje al General Manuel Belgrano."},
+{id:"drogas", month:6, day:26, sortDay:177, cat:"salud", title:"Día Internacional de Lucha contra el Uso Indebido y el Tráfico Ilícito de Drogas", desc:"Jornada de prevención y reflexión sobre consumos problemáticos.", fuente:"ONU.", acts:["Articular con dispositivo de salud mental y consumos problemáticos del SAPS.","Charla de reducción de riesgos y daños en PROFES/Salud Escolar."], texto:""},
+
+// ---- JULIO ----
+{id:"poblacion", month:7, day:11, sortDay:192, cat:"salud", title:"Día Mundial de la Población", desc:"Reflexiona sobre dinámica poblacional, salud reproductiva y planificación familiar.", fuente:"ONU.", acts:["Difundir métodos anticonceptivos disponibles en el dispositivo de salud sexual."], texto:""},
+{id:"independencia", month:7, day:9, sortDay:190, cat:"patria", title:"Día de la Independencia", desc:"Feriado nacional en conmemoración de la Declaración de la Independencia (1816).", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:"9 de Julio: Día de la Independencia Argentina."},
+{id:"hepatitis", month:7, day:28, sortDay:209, cat:"salud", title:"Día Mundial contra la Hepatitis", desc:"Jornada de concientización sobre hepatitis virales B y C, su prevención, testeo y tratamiento.", fuente:"OMS / Ministerio de Salud de la Provincia de Buenos Aires.", acts:["Jornada de testeo rápido de hepatitis B y C en dispositivos de testeo/infectología.","Reforzar esquema de vacunación para hepatitis B en recién nacidos y grupos de riesgo.","Difundir circuito de derivación a hepatología para pacientes reactivos."], texto:"Día Mundial contra la Hepatitis. El testeo es rápido, confidencial y gratuito. Conocé tu estado: acercate a tu centro de salud."},
+
+// ---- AGOSTO ----
+{id:"lactancia", month:8, day:"1 al 7", sortDay:213, cat:"salud", title:"Semana Mundial de la Lactancia Materna", desc:"Promueve la lactancia materna exclusiva y sus beneficios para la salud materno-infantil.", fuente:"OMS / UNICEF.", acts:["Grupo de apoyo a la lactancia en consultorio de niñeces.","Cartelería y consejería sobre lactancia en sala de espera.","Capacitación breve al equipo sobre técnica y mitos frecuentes."], texto:"Semana Mundial de la Lactancia Materna. Si necesitás acompañamiento para amamantar, en tu centro de salud hay un equipo dispuesto a ayudarte."},
+{id:"san-martin", month:8, day:17, sortDay:229, cat:"patria", title:"Paso a la Inmortalidad del General José de San Martín", desc:"Feriado nacional en homenaje al Libertador.", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:"17 de agosto: homenaje al General José de San Martín, Libertador de la Patria."},
+{id:"dia-nino", month:8, day:"tercer domingo", sortDay:236, cat:"patria", title:"Día del Niño", desc:"Celebración tradicional argentina en homenaje a niñas y niños.", fuente:"Calendario tradicional argentino.", acts:["Actividad recreativa en dispositivo de niñeces.","Articular con Salud Escolar para jornada lúdico-sanitaria."], texto:""},
+
+// ---- SEPTIEMBRE ----
+{id:"suicidio", month:9, day:10, sortDay:253, cat:"salud", title:"Día Mundial para la Prevención del Suicidio", desc:"Jornada de sensibilización y prevención en salud mental.", fuente:"OMS / IASP.", acts:["Capacitación al equipo en detección de señales de alarma y primeros auxilios psicológicos.","Difundir línea de atención en crisis y circuito de derivación a salud mental.","Actividad de reflexión con equipo de PROFES/Salud Escolar."], texto:"Día Mundial para la Prevención del Suicidio. Hablar ayuda. Si vos o alguien que conocés lo necesita, en tu centro de salud hay un equipo dispuesto a escuchar y acompañar."},
+{id:"alzheimer", month:9, day:21, sortDay:264, cat:"salud", title:"Día Mundial del Alzheimer", desc:"Jornada de concientización sobre demencias y acompañamiento a personas mayores y sus familias.", fuente:"OMS / Alzheimer's Disease International.", acts:["Articular con programa gerontológico y consultorio de memoria.","Difundir signos de alarma y circuito de evaluación cognitiva."], texto:""},
+{id:"embarazo-adolescente", month:9, day:28, sortDay:271, cat:"salud", title:"Día Mundial de Prevención del Embarazo no Planificado en la Adolescencia", desc:"Promueve el acceso a educación sexual integral y métodos anticonceptivos para adolescentes.", fuente:"Ministerio de Salud de la Nación.", acts:["Consejería en salud sexual accesible para adolescentes sin turno previo.","Articular con PROFES y Salud Escolar para taller de ESI.","Difundir anticoncepción de emergencia y métodos disponibles."], texto:"Día Mundial de Prevención del Embarazo no Planificado en la Adolescencia. Consultá sobre métodos anticonceptivos y educación sexual integral en tu centro de salud, la atención es confidencial."},
+
+// ---- OCTUBRE ----
+{id:"personas-mayores", month:10, day:1, sortDay:274, cat:"salud", title:"Día Internacional de las Personas de Edad", desc:"Jornada de reconocimiento a los derechos y la salud de las personas mayores.", fuente:"ONU.", acts:["Actividad recreativa/preventiva con el programa gerontológico."], texto:""},
+{id:"diversidad-cultural", month:10, day:12, sortDay:285, cat:"patria", title:"Día del Respeto a la Diversidad Cultural", desc:"Feriado nacional que promueve la reflexión histórica sobre pueblos originarios y diversidad cultural.", fuente:"Calendario oficial de feriados, Argentina.", acts:["Articular con equipo de salud intercultural del área programática, si corresponde."], texto:""},
+{id:"salud-mental-mundial", month:10, day:10, sortDay:283, cat:"salud", title:"Día Mundial de la Salud Mental", desc:"Jornada central para la agenda de salud mental del equipo de SAPS.", fuente:"OMS / Ministerio de Salud de la Nación.", acts:["Jornada abierta con el equipo de Salud Mental (8 profesionales) en dispositivos intra y extramuro.","Taller de la Memoria y espacios grupales con difusión ampliada esa semana.","Cartelería sobre líneas de escucha y circuito de acceso a consultorio de salud mental.","Actividad conjunta con Consultorio Mujeres y Diversidad."], texto:"Día Mundial de la Salud Mental. En el SAPS contamos con un equipo interdisciplinario para acompañarte. Pedí turno en tu centro de salud, la consulta es gratuita y confidencial."},
+{id:"cancer-mama", month:10, day:19, sortDay:292, cat:"salud", title:"Día Internacional de Lucha contra el Cáncer de Mama", desc:"Promueve la detección temprana mediante mamografía y autoexamen.", fuente:"OMS / Instituto Nacional del Cáncer.", acts:["Jornada de turnos programados de mamografía articulada con el hospital.","Charla breve sobre autoexamen y factores de riesgo en sala de espera."], texto:"Día Internacional de Lucha contra el Cáncer de Mama. La detección temprana es la mejor herramienta: consultá sobre turnos de mamografía en tu centro de salud."},
+
+// ---- NOVIEMBRE ----
+{id:"diabetes", month:11, day:14, sortDay:318, cat:"salud", title:"Día Mundial de la Diabetes", desc:"Jornada de prevención, diagnóstico y control de la diabetes.", fuente:"OMS / Federación Internacional de Diabetes.", acts:["Jornada de glucemia capilar gratuita (articular con Taller de Diabetes de Hospital Melo y US Monte Chingolo).","Charla sobre alimentación saludable y actividad física.","Difundir signos de alarma de descompensación."], texto:"Día Mundial de la Diabetes. Controlá tu glucemia: es rápido y gratuito. Te esperamos en el Taller de Diabetes de tu centro de salud."},
+{id:"epoc", month:11, day:"tercer miércoles", sortDay:324, cat:"salud", title:"Día Mundial de la EPOC", desc:"Concientización sobre enfermedad pulmonar obstructiva crónica, ligada al tabaquismo.", fuente:"GOLD / OMS.", acts:["Articular con consultorio de cesación tabáquica.","Difundir signos de alarma respiratoria en población fumadora."], texto:""},
+{id:"soberania", month:11, day:20, sortDay:324, cat:"patria", title:"Día de la Soberanía Nacional", desc:"Feriado nacional en conmemoración de la Batalla de la Vuelta de Obligado.", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:"20 de noviembre: Día de la Soberanía Nacional."},
+{id:"niño-universal", month:11, day:20, sortDay:324, cat:"salud", title:"Día Universal del Niño", desc:"Jornada de promoción de derechos de niñas y niños.", fuente:"UNICEF / ONU.", acts:["Actividad conjunta con dispositivo de Niñeces y Salud Escolar."], texto:""},
+{id:"violencia-mujer", month:11, day:25, sortDay:329, cat:"salud", title:"Día Internacional de la Eliminación de la Violencia contra la Mujer", desc:"Inicia los 16 Días de Activismo contra la Violencia de Género.", fuente:"ONU / Ministerio de Salud de la Provincia de Buenos Aires.", acts:["Difundir circuito de atención de Consultorio Violencia Intramuro y Grupo Violencia Extramuro.","Cartelería con línea 144 y dispositivos de acompañamiento.","Articular con referentes barriales (escuelas, polideportivo) para jornada de sensibilización.","Reforzar protocolo de derivación desde guardia y consultorios."], texto:"25 de noviembre: Día Internacional de la Eliminación de la Violencia contra la Mujer. Si estás atravesando una situación de violencia, no estás sola/e: línea 144, las 24 horas, de forma gratuita y confidencial. También podés acercarte a tu centro de salud."},
+
+// ---- DICIEMBRE ----
+{id:"sida", month:12, day:1, sortDay:335, cat:"salud", title:"Día Mundial de la Lucha contra el SIDA", desc:"Jornada central para la agenda de VIH del SAPS: testeo, prevención y tratamiento.", fuente:"OMS / Ministerio de Salud de la Nación (ETMI-Plus).", acts:["Jornada extendida de testeo rápido de VIH y sífilis (dispositivo Testeo VIH/Sífilis).","Difundir PrEP y PEP disponibles en infectología.","Recordar circuito de seguimiento de embarazadas para prevención de transmisión vertical.","Cartelería con información sobre tratamiento antirretroviral gratuito."], texto:"1° de diciembre: Día Mundial de la Lucha contra el SIDA. El testeo de VIH es rápido, gratuito y confidencial. Conocé tu estado serológico en tu centro de salud más cercano."},
+{id:"dia-medico", month:12, day:3, sortDay:337, cat:"salud", title:"Día del Médico", desc:"Homenaje al Dr. Carlos Juan Finlay, en reconocimiento a la profesión médica en Argentina.", fuente:"Confederación Médica Panamericana.", acts:["Reconocimiento institucional al equipo médico del SAPS."], texto:"Feliz Día del Médico a todo el equipo del SAPS. Gracias por sostener la atención de nuestra comunidad todos los días."},
+{id:"discapacidad", month:12, day:3, sortDay:337, cat:"salud", title:"Día Internacional de las Personas con Discapacidad", desc:"Promueve derechos, inclusión y accesibilidad en salud.", fuente:"ONU.", acts:["Revisar accesibilidad física y comunicacional del centro de salud.","Articular con dispositivo de discapacidad del área programática."], texto:""},
+{id:"ddhh", month:12, day:10, sortDay:344, cat:"salud", title:"Día Internacional de los Derechos Humanos", desc:"Jornada de reflexión sobre derechos humanos, con relevancia directa para el derecho a la salud.", fuente:"ONU.", acts:["Actividad de reflexión institucional con enfoque de derechos en salud."], texto:""},
+{id:"inmaculada", month:12, day:8, sortDay:342, cat:"patria", title:"Inmaculada Concepción de la Virgen María", desc:"Feriado nacional.", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:""},
+{id:"navidad", month:12, day:25, sortDay:359, cat:"patria", title:"Navidad", desc:"Feriado nacional.", fuente:"Calendario oficial de feriados, Argentina.", acts:[], texto:""}
+];
+
+// Fill default difusion text for items without one
+DATA.forEach(d=>{
+  if(!d.texto){
+    d.texto = `Hoy conmemoramos: ${d.title}. Desde el SAPS del Hospital Narciso López acompañamos esta fecha con información y actividades para la comunidad. Consultá en tu centro de salud más cercano.`;
+  }
+});
+
+let currentCat = "todas";
+let currentMonth = null; // null = todas
+let currentSearch = "";
+
+const monthNav = document.getElementById('monthNav');
+const todosBtn = document.createElement('button');
+todosBtn.className='mbtn'; todosBtn.textContent='Todo el año'; todosBtn.setAttribute('aria-pressed','true');
+todosBtn.onclick=()=>{currentMonth=null; render();};
+monthNav.appendChild(todosBtn);
+MESES.forEach((m,i)=>{
+  const b=document.createElement('button');
+  b.className='mbtn'; b.textContent=m; b.setAttribute('aria-pressed','false');
+  b.onclick=()=>{currentMonth=i+1; render();};
+  monthNav.appendChild(b);
+});
+
+function updateMonthButtons(){
+  const btns = monthNav.querySelectorAll('.mbtn');
+  btns.forEach((b,i)=>{
+    if(i===0) b.setAttribute('aria-pressed', currentMonth===null ? 'true':'false');
+    else b.setAttribute('aria-pressed', currentMonth===i ? 'true':'false');
+  });
+}
+
+document.querySelectorAll('.catbtn').forEach(b=>{
+  b.onclick=()=>{
+    currentCat = b.dataset.cat;
+    document.querySelectorAll('.catbtn').forEach(x=>x.setAttribute('aria-pressed', x===b ? 'true':'false'));
+    render();
+  };
+});
+
+document.getElementById('search').addEventListener('input', (e)=>{
+  currentSearch = e.target.value.trim().toLowerCase();
+  render();
+});
+
+function matchesFilters(d){
+  if(currentCat!=='todas' && d.cat!==currentCat) return false;
+  if(currentMonth!==null && d.month!==currentMonth) return false;
+  if(currentSearch){
+    const hay = (d.title+' '+d.desc).toLowerCase();
+    if(!hay.includes(currentSearch)) return false;
+  }
+  return true;
+}
+
+function render(){
+  updateMonthButtons();
+  const container = document.getElementById('results');
+  container.innerHTML='';
+  const filtered = DATA.filter(matchesFilters);
+  if(filtered.length===0){
+    container.innerHTML = '<div class="empty">No se encontraron efemérides con estos filtros.</div>';
+    return;
+  }
+  for(let m=1;m<=12;m++){
+    const items = filtered.filter(d=>d.month===m).sort((a,b)=>a.sortDay-b.sortDay);
+    if(items.length===0) continue;
+    const group = document.createElement('div');
+    group.className='month-group';
+    group.innerHTML = `<div class="month-title">${MESES[m-1]}</div>`;
+    const cards = document.createElement('div');
+    cards.className='cards';
+    items.forEach(d=>{
+      const card = document.createElement('div');
+      card.className='card';
+      const dayLabel = typeof d.day==='number' ? d.day : '•';
+      card.innerHTML = `
+        <div class="daybadge ${d.cat}">${dayLabel}</div>
+        <div class="card-body">
+          <span class="card-title">${d.title}</span><span class="tag ${d.cat}">${d.cat==='patria'?'Patria':'Salud'}</span>
+          <div class="card-meta">${typeof d.day==='number' ? d.day+' de '+MESES[m-1] : d.day+', '+MESES[m-1]}</div>
+        </div>`;
+      card.onclick=()=>openModal(d);
+      cards.appendChild(card);
+    });
+    group.appendChild(cards);
+    container.appendChild(group);
+  }
+}
+
+// ---- Upcoming widget ----
+const TODAY = new Date(2026,6,3); // 3 de julio de 2026
+function daysUntil(d){
+  const thisYearDate = new Date(2026, d.month-1, typeof d.day==='number'?d.day:15);
+  let diff = Math.ceil((thisYearDate - TODAY)/86400000);
+  if(diff < -1){ // ya pasó este año, proyectar al año siguiente para orden, pero no mostramos
+    diff += 365;
+  }
+  return diff;
+}
+function renderUpcoming(){
+  const row = document.getElementById('upcomingRow');
+  const upcoming = DATA
+    .map(d=>({d, diff: daysUntil(d)}))
+    .filter(x=>x.diff>=0)
+    .sort((a,b)=>a.diff-b.diff)
+    .slice(0,8);
+  row.innerHTML='';
+  upcoming.forEach(({d,diff})=>{
+    const c = document.createElement('div');
+    c.className='upc-card';
+    const dayLabel = typeof d.day==='number' ? `${d.day} ${MESES[d.month-1].slice(0,3)}` : `${MESES[d.month-1].slice(0,3)}`;
+    c.innerHTML = `<div class="upc-date">${dayLabel} · ${diff===0?'HOY':diff+' días'}</div><div class="upc-title">${d.title}</div>`;
+    c.onclick=()=>openModal(d);
+    row.appendChild(c);
+  });
+}
+
+// ---- Modal ----
+const overlay = document.getElementById('overlay');
+let currentItem = null;
+
+function openModal(d){
+  currentItem = d;
+  document.getElementById('modalTag').textContent = d.cat==='patria' ? 'Fecha patria' : 'Día de salud';
+  document.getElementById('modalTag').className = 'tag '+d.cat;
+  document.getElementById('modalTitle').textContent = d.title;
+  document.getElementById('modalFecha').textContent = (typeof d.day==='number' ? d.day+' de '+MESES[d.month-1] : d.day+' de '+MESES[d.month-1]);
+  document.getElementById('modalDesc').textContent = d.desc;
+  document.getElementById('modalFuente').textContent = 'Fuente: '+d.fuente;
+
+  const linksEl = document.getElementById('modalLinks');
+  linksEl.innerHTML = '';
+  const q = encodeURIComponent(d.title);
+  const linksToShow = [];
+  if(d.cat==='patria'){
+    linksToShow.push({label:'Calendario oficial de feriados (Nación)', url:'https://www.argentina.gob.ar/jefatura/feriados-nacionales-2026'});
+  } else {
+    linksToShow.push({label:'Buscar en Ministerio de Salud (Nación)', url:`https://www.google.com/search?q=${q}+site:argentina.gob.ar`});
+    linksToShow.push({label:'Buscar en Ministerio de Salud (PBA)', url:`https://www.google.com/search?q=${q}+site:gba.gob.ar`});
+    linksToShow.push({label:'Buscar en OPS/OMS', url:`https://www.google.com/search?q=${q}+site:paho.org+OR+site:who.int`});
+  }
+  linksToShow.forEach(l=>{
+    const a = document.createElement('a');
+    a.href = l.url; a.target='_blank'; a.rel='noopener';
+    a.className = 'btn ghost';
+    a.style.textDecoration='none'; a.style.display='inline-block';
+    a.textContent = l.label;
+    linksEl.appendChild(a);
+  });
+  const actsEl = document.getElementById('modalActs');
+  actsEl.innerHTML='';
+  if(d.acts && d.acts.length){
+    d.acts.forEach(a=>{
+      const li=document.createElement('li'); li.textContent=a; actsEl.appendChild(li);
+    });
+  } else {
+    actsEl.innerHTML = '<li>Sin sugerencias cargadas todavía — se puede completar según necesidad del equipo.</li>';
+  }
+  document.getElementById('modalTexto').value = d.texto;
+  document.getElementById('savedFlag').style.display='none';
+  loadNote(d.id);
+  overlay.classList.add('open');
+}
+document.getElementById('closeModal').onclick=()=>overlay.classList.remove('open');
+overlay.addEventListener('click',(e)=>{ if(e.target===overlay) overlay.classList.remove('open'); });
+
+document.getElementById('copyBtn').onclick=()=>{
+  const ta = document.getElementById('modalTexto');
+  ta.select(); ta.setSelectionRange(0,99999);
+  navigator.clipboard.writeText(ta.value).then(()=>{
+    const btn = document.getElementById('copyBtn');
+    const original = btn.textContent;
+    btn.textContent='Copiado ✓';
+    setTimeout(()=>btn.textContent=original,1500);
+  }).catch(()=>{ document.execCommand('copy'); });
+};
+document.getElementById('resetBtn').onclick=()=>{
+  if(currentItem) document.getElementById('modalTexto').value = currentItem.texto;
+};
+
+// ---- Personal notes via window.storage ----
+async function loadNote(id){
+  const noteEl = document.getElementById('modalNote');
+  noteEl.value='';
+  try{
+    const res = await window.storage.get('nota:'+id, false);
+    if(res && res.value) noteEl.value = res.value;
+  }catch(e){ /* no note saved yet */ }
+}
+document.getElementById('saveNoteBtn').onclick=async ()=>{
+  if(!currentItem) return;
+  const val = document.getElementById('modalNote').value;
+  try{
+    await window.storage.set('nota:'+currentItem.id, val, false);
+    const flag = document.getElementById('savedFlag');
+    flag.style.display='inline';
+    setTimeout(()=>flag.style.display='none',1800);
+  }catch(e){
+    alert('No se pudo guardar la nota en este momento.');
+  }
+};
+
+render();
+renderUpcoming();
+</script>
+</body>
+</html>
